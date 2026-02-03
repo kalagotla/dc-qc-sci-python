@@ -60,7 +60,7 @@ class SimpleData:
         y_low, y_high = ax.get_ylim()
         ax.set_aspect(abs((x_right - x_left) / (y_low - y_high)) * ratio)
 
-        # plot loss and accuracy
+        # plot loss and R²
         ax = fig.add_subplot(1, 2, 2)
         for xdata, ydata, label in err_data:
             ax.plot(xdata, ydata, label=label)
@@ -75,15 +75,18 @@ class SimpleData:
         ax.set_aspect(abs((x_right - x_left) / (y_low - y_high)) * ratio)
         plt.show()
 
-    # The function to calculate the accuracy
+    # The function to calculate R² (coefficient of determination)
 
-    def accuracy(self, model, data_set):
-        yhat = model(data_set.x)
-        return (abs(yhat.data.numpy() - data_set.y.numpy()) <= 1.0).mean()
+    def r_squared(self, model, data_set):
+        yhat = model(data_set.x).detach()
+        y = data_set.y
+        ss_res = ((y - yhat) ** 2).sum()
+        ss_tot = ((y - y.mean()) ** 2).sum()
+        return (1 - ss_res / ss_tot).item()
 
     def train(self, plot=True, plot_at=1, save_at=100, filename='../models/simple_data_model.tar'):
         LOSS = []
-        ACC = []
+        R2 = []
         LOSST = []
         for epoch in range(self.epochs):
             for x, y in self.train_loader:
@@ -94,7 +97,7 @@ class SimpleData:
                 self.optimizer.step()
             LOSS.append(loss.item())
             LOSST.append(sum(LOSS) / len(LOSS))
-            ACC.append(self.accuracy(self.net, self.data_set))
+            R2.append(self.r_squared(self.net, self.data_set))
 
             if plot:
                 if epoch % plot_at == 0:
@@ -104,12 +107,12 @@ class SimpleData:
 
                     plot_data.append([self.data_set.x.numpy(), self.data_set.y.numpy(), 'True data'])
                     plot_data.append([self.data_set.x.numpy(), predicted, 'Predictions'])
-                    err_data.append([np.arange(len(ACC)), ACC, 'Accuracy = ' + str(ACC[-1])])
-                    err_data.append([np.arange(len(LOSST)), LOSST, 'Total Loss = ' + str([LOSST[-1]])])
+                    err_data.append([np.arange(len(R2)), R2, 'R² = ' + str(round(R2[-1], 4))])
+                    err_data.append([np.arange(len(LOSST)), LOSST, 'Loss = ' + str(round(LOSST[-1], 4))])
                     self.live_plot(plot_data, err_data,
                                    suptitle='epoch = ' + str(epoch),
                                    title1='Function vs. DNN Model',
-                                   title2='Loss and prediction')
+                                   title2='Loss and R²')
 
             if epoch % save_at == 0:
                 torch.save({
