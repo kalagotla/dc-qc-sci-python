@@ -4,17 +4,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader, random_split
 
 from IPython.display import clear_output
-import time
+
+from .network import Net
 
 torch.manual_seed(1)
 dtype = torch.float
 device = torch.device("cpu")
-
-
 # device = torch.device("cuda:0")
 
 
@@ -46,7 +44,6 @@ class Univariate:
         self.train_loader = DataLoader(dataset=self.train_data_set, batch_size=64)
         self.optimizer = torch.optim.SGD(self.net.parameters(), lr=self.learning_rate, momentum=self.momentum)
 
-    @staticmethod
     def live_plot(self, data, err_data, figsize=(14, 10), suptitle='', title1='', title2='', xlabel='', ylabel=''):
         clear_output(wait=True)
         fig = plt.figure(figsize=figsize)
@@ -81,10 +78,9 @@ class Univariate:
 
     # The function to calculate the accuracy
 
-    @staticmethod
     def accuracy(self, model, data_set):
         yhat = model(data_set.x)
-        return (abs(yhat - data_set.y) <= 1e-1).numpy().mean()
+        return (abs(yhat.detach() - data_set.y) <= 1e-1).numpy().mean()
 
     def train(self, plot=True, plot_at=1, save_at=100, filename='../models/1var_model.tar'):
         LOSS = []
@@ -95,12 +91,11 @@ class Univariate:
                 self.optimizer.zero_grad()
                 yhat = self.net(x)
                 loss = self.criterion(yhat, y)
-                self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
             LOSS.append(loss.item())
             LOSST.append(sum(LOSS) / len(LOSS))
-            ACC.append(self.accuracy(self, self.net, self.data_set))
+            ACC.append(self.accuracy(self.net, self.data_set))
 
             if plot:
                 if epoch % plot_at == 0:
@@ -112,7 +107,7 @@ class Univariate:
                     plot_data.append([self.data_set.x.numpy(), predicted, 'Predictions'])
                     err_data.append([np.arange(len(ACC)), ACC, 'Accuracy = ' + str(ACC[-1])])
                     err_data.append([np.arange(len(LOSST)), LOSST, 'Total Loss = ' + str([LOSST[-1]])])
-                    self.live_plot(self, plot_data, err_data,
+                    self.live_plot(plot_data, err_data,
                                    suptitle='epoch = ' + str(epoch),
                                    title1='Function vs. DNN Model',
                                    title2='Loss and prediction')
@@ -186,25 +181,3 @@ class Data(Dataset):
         plt.plot(self.x, self.y, '.')
         plt.title(title)
         plt.show()
-
-
-# Create the model class using relu as the activation function
-# Create Net model class
-class Net(nn.Module):
-
-    # Constructor
-    def __init__(self, Layers):
-        super(Net, self).__init__()
-        self.hidden = nn.ModuleList()
-        for input_size, output_size in zip(Layers, Layers[1:]):
-            self.hidden.append(nn.Linear(input_size, output_size))
-
-    # Prediction
-    def forward(self, activation):
-        L = len(self.hidden)
-        for (l, linear_transform) in zip(range(L), self.hidden):
-            if l < L - 1:
-                activation = torch.tanh(linear_transform(activation))
-            else:
-                activation = linear_transform(activation)
-        return activation
