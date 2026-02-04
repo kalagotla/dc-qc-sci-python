@@ -3,6 +3,7 @@ import glob
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation
+from matplotlib.widgets import Button, Slider
 import sys
 
 # Ensure project src is importable when running this script directly
@@ -70,14 +71,16 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
 
     umin, umax = compute_u_limits(flow_files)
 
+    # Create figure with space for controls
+    fig = plt.figure(figsize=(10, 5))
+    ax = plt.subplot2grid((4, 1), (0, 0), rowspan=3)
+    
     # Initialize first frame
     flow0 = FlowIO(flow_files[0])
     flow0.read_flow(data_type='f4')
     blocks0 = prepare_block_views(grid, flow0)
 
-    fig, ax = plt.subplots(figsize=(8, 3))
     contour_sets = []
-
     # Plot initial contours per block
     for (X, Y, U) in blocks0:
         cs = ax.contourf(X, Y, U, levels=levels, vmin=umin, vmax=umax, cmap='RdBu_r')
@@ -91,17 +94,32 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
     ax.set_title(os.path.basename(flow_files[0]))
     ax.set_xlabel('x')
     ax.set_ylabel('y')
-    plt.tight_layout()
-
-    def init():
-        # Return initial collections
-        all_collections = []
-        for cs in contour_sets:
-            all_collections.extend(cs.collections)
-        return all_collections
-
-    def update(idx):
+    
+    # Create control panel
+    ax_slider = plt.subplot2grid((4, 1), (3, 0))
+    slider = Slider(ax_slider, 'Timestep', 0, len(flow_files)-1, 
+                    valinit=0, valfmt='%d', valstep=1)
+    
+    # Create buttons
+    ax_prev = plt.axes([0.1, 0.02, 0.1, 0.04])
+    ax_play = plt.axes([0.25, 0.02, 0.1, 0.04])
+    ax_pause = plt.axes([0.4, 0.02, 0.1, 0.04])
+    ax_next = plt.axes([0.55, 0.02, 0.1, 0.04])
+    
+    btn_prev = Button(ax_prev, '◀ Prev')
+    btn_play = Button(ax_play, '▶ Play')
+    btn_pause = Button(ax_pause, '⏸ Pause')
+    btn_next = Button(ax_next, 'Next ▶')
+    
+    # Animation state
+    is_playing = [False]
+    current_frame = [0]
+    slider_updating = [False]  # Flag to prevent recursive updates
+    
+    def update_frame(idx):
+        """Update the plot with data from frame idx"""
         nonlocal contour_sets
+        
         # Remove previous contour collections
         for cs in contour_sets:
             for coll in cs.collections:
@@ -112,21 +130,90 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
         flow = FlowIO(flow_files[idx])
         flow.read_flow(data_type='f4')
         blocks = prepare_block_views(grid, flow)
-        all_collections = []
+        
+        # Redraw contours
         for (X, Y, U) in blocks:
             cs = ax.contourf(X, Y, U, levels=levels, vmin=umin, vmax=umax, cmap='RdBu_r')
             contour_sets.append(cs)
-            all_collections.extend(cs.collections)
         
         # Update title
-        ax.set_title(os.path.basename(flow_files[idx]))
+        ax.set_title(f'Frame {idx+1}/{len(flow_files)}: {os.path.basename(flow_files[idx])}')
         
-        # Return all collections so matplotlib knows what to redraw
-        return all_collections
-
-    anim = animation.FuncAnimation(fig, update, init_func=init,
-                                   frames=len(flow_files), interval=interval_ms, blit=False, repeat=True)
-
+        # Update colorbar to reflect new data
+        if len(contour_sets) > 0:
+            cbar.update_normal(contour_sets[-1])
+        
+        # Update slider without triggering callback
+        slider_updating[0] = True
+        slider.set_val(idx)
+        slider_updating[0] = False
+        
+        # Force redraw - use draw() instead of draw_idle() for immediate update
+        fig.canvas.draw()
+    
+    def animate_frame(frame_idx):
+        """Animation callback function"""
+        if is_playing[0]:
+            # Increment current frame when playing
+            current_frame[0] = (current_frame[0] + 1) % len(flow_files)
+            update_frame(current_frame[0])
+        return []
+    
+    # Create animation first
+    anim = animation.FuncAnimation(fig, animate_frame, frames=len(flow_files),
+                                   interval=interval_ms, repeat=True, blit=False)
+    
+    # Start paused
+    if anim.event_source:
+        anim.event_source.stop()
+    is_playing[0] = False
+    
+    # Now define handlers that can reference anim
+    def on_slider_change(val):
+        """Handle slider changes"""
+        if not slider_updating[0]:
+            idx = int(val)
+            if not is_playing[0]:
+                current_frame[0] = idx
+                update_frame(idx)
+    
+    def on_prev(event):
+        """Go to previous frame"""
+        is_playing[0] = False
+        if anim.event_source:
+            anim.event_source.stop()
+        current_frame[0] = max(0, current_frame[0] - 1)
+        update_frame(current_frame[0])
+    
+    def on_next(event):
+        """Go to next frame"""
+        is_playing[0] = False
+        if anim.event_source:
+            anim.event_source.stop()
+        current_frame[0] = min(len(flow_files) - 1, current_frame[0] + 1)
+        update_frame(current_frame[0])
+    
+    def on_play(event):
+        """Start animation from current frame"""
+        is_playing[0] = True
+        if anim.event_source:
+            anim.event_source.start()
+    
+    def on_pause(event):
+        """Pause animation"""
+        is_playing[0] = False
+        if anim.event_source:
+            anim.event_source.stop()
+    
+    # Connect callbacks
+    slider.on_changed(on_slider_change)
+    btn_prev.on_clicked(on_prev)
+    btn_next.on_clicked(on_next)
+    btn_play.on_clicked(on_play)
+    btn_pause.on_clicked(on_pause)
+    
+    plt.tight_layout()
+    
     if save_path is not None:
         save_path = os.path.join(os.path.dirname(__file__), save_path)
         anim.save(save_path, dpi=150, writer='ffmpeg')
