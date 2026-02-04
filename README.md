@@ -102,11 +102,22 @@ dc-qc-sci-python/
 │
 ├── hour2_scientific/            # Hour 2: Scientific Computing
 │   ├── 01_data_loading.ipynb    # Data processing tutorial
-│   └── data/                    # Sample datasets
-│       └── sample_data.csv
+│   ├── modules/                 # Helpers for Hour 2
+│   │   ├── animation.py         # Flow field animation
+│   │   └── helpers.py           # Plot and data utilities
+│   └── data/
+│       ├── sample_data.csv      # Sample experimental data (Part 1)
+│       └── cylinder/            # LES cylinder CFD subset (Part 2)
+│           ├── README.md        # Data description
+│           ├── cylinder.sp.x   # Grid file
+│           └── sol-*.q         # Flow snapshots (e.g. lptlib format)
 │
 ├── hour3_ml/                    # Hour 3: Machine Learning
+│   ├── data/
+│   │   └── airfoil_self_noise.dat
 │   ├── simple_dnns/             # DNN package
+│   │   ├── network.py, univariate.py, bivariate.py, simple_data.py, noise_data.py
+│   │   └── pretrained_models/  # Saved checkpoints (.tar) and generate.py
 │   ├── dnns_with_pytorch.ipynb  # PyTorch tutorial
 │   └── ml_challenge_info.md     # ML Challenge info
 │
