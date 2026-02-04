@@ -102,10 +102,10 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
     ax_pause = plt.axes([0.3, 0.15, 0.08, 0.04])
     ax_next = plt.axes([0.4, 0.15, 0.08, 0.04])
     
-    btn_prev = Button(ax_prev, '◀ Prev')
-    btn_play = Button(ax_play, '▶ Play')
-    btn_pause = Button(ax_pause, '⏸ Pause')
-    btn_next = Button(ax_next, 'Next ▶')
+    btn_prev = Button(ax_prev, '< Prev')
+    btn_play = Button(ax_play, '> Play')
+    btn_pause = Button(ax_pause, '|| Pause')
+    btn_next = Button(ax_next, 'Next >')
     
     # Create slider below buttons
     ax_slider = plt.axes([0.1, 0.05, 0.8, 0.03])
@@ -121,13 +121,10 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
         """Update the plot with data from frame idx"""
         nonlocal contour_sets
         
-        # Clear existing contours by removing collections
-        for cs in contour_sets:
-            for coll in cs.collections:
-                try:
-                    coll.remove()
-                except:
-                    pass
+        # Clear existing contours by removing all collections from axes
+        # This works for both old and new matplotlib versions
+        while len(ax.collections) > 0:
+            ax.collections[0].remove()
         contour_sets = []
 
         # Load and process new frame
@@ -182,21 +179,25 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
             except:
                 plt.pause(0.01)
     
+    # Frame counter for animation sequence
+    anim_frame_count = [0]
+    
     def animate_frame(frame_idx):
-        """Animation callback function - called by FuncAnimation"""
+        """Animation callback function"""
         if is_playing[0]:
             # Move to next frame
             current_frame[0] = (current_frame[0] + 1) % len(flow_files)
             update_frame(current_frame[0])
         return []
     
-    # Create animation with fixed number of frames - it will repeat
-    anim = animation.FuncAnimation(fig, animate_frame, frames=len(flow_files),
-                                   interval=interval_ms, repeat=True, blit=False)
+    # Create animation with many frames so it can run continuously
+    anim = animation.FuncAnimation(fig, animate_frame, frames=range(10000),
+                                   interval=interval_ms, repeat=True, blit=False, cache_frame_data=False)
     
-    # Don't stop the animation - let it run but only update when playing
-    # This ensures the callback is always called
+    # Start paused
     is_playing[0] = False
+    if hasattr(anim, 'event_source') and anim.event_source:
+        anim.event_source.stop()
     
     # Now define handlers that can reference anim
     def on_slider_change(val):
@@ -222,11 +223,14 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
     def on_play(event):
         """Start animation"""
         is_playing[0] = True
-        # Animation is always running, we just toggle the flag
+        if hasattr(anim, 'event_source') and anim.event_source:
+            anim.event_source.start()
     
     def on_pause(event):
         """Pause animation"""
         is_playing[0] = False
+        if hasattr(anim, 'event_source') and anim.event_source:
+            anim.event_source.stop()
     
     # Connect callbacks
     slider.on_changed(on_slider_change)
@@ -235,7 +239,8 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
     btn_play.on_clicked(on_play)
     btn_pause.on_clicked(on_pause)
     
-    plt.tight_layout()
+    # Don't use tight_layout with manually positioned widgets
+    # plt.tight_layout()  # Commented out to avoid warnings with manual positioning
     
     if save_path is not None:
         save_path = os.path.join(os.path.dirname(__file__), save_path)
