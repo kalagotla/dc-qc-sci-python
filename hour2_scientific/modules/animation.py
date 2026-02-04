@@ -139,18 +139,25 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
             cs = ax.contourf(X, Y, U, levels=levels, vmin=umin, vmax=umax, cmap='RdBu_r')
             contour_sets.append(cs)
         
-        # Update title
+        # Update title - ensure it's actually set
         title_text = f'Frame {idx+1}/{len(flow_files)}: {os.path.basename(flow_files[idx])}'
         ax.set_title(title_text)
+        ax.title.set_text(title_text)  # Also set directly
+        
+        # Ensure axis properties are maintained
+        ax.set_aspect('equal', adjustable='box')
+        ax.set_xlim(-2, 12)
+        ax.set_ylim(-2, 2)
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
         
         # Update colorbar to reflect new data
         if len(contour_sets) > 0:
             try:
+                cbar.mappable = contour_sets[-1]
                 cbar.update_normal(contour_sets[-1])
             except:
-                # If update_normal fails, try setting mappable directly
                 try:
-                    cbar.mappable = contour_sets[-1]
                     cbar.update_bruteforce(contour_sets[-1])
                 except:
                     pass
@@ -163,14 +170,16 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
             pass
         slider_updating[0] = False
         
-        # Force redraw - try multiple methods for compatibility
+        # Force redraw - use flush_events to ensure update
         try:
             fig.canvas.draw()
+            fig.canvas.flush_events()
         except:
             try:
                 fig.canvas.draw_idle()
+                plt.pause(0.01)
             except:
-                plt.pause(0.001)
+                plt.pause(0.01)
     
     def animate_frame(frame_idx):
         """Animation callback function - called by FuncAnimation"""
