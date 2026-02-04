@@ -3,7 +3,7 @@ import glob
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation
-from matplotlib.widgets import Button, Slider
+from matplotlib.widgets import Slider
 import sys
 
 # Ensure project src is importable when running this script directly
@@ -95,23 +95,15 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     
-    # Create control panel - buttons first, then slider below
-    # Create buttons in a row above the slider (larger for better clickability)
-    # Use fig.add_axes to ensure proper association with figure
-    ax_prev = fig.add_axes([0.1, 0.12, 0.1, 0.05])
-    ax_play = fig.add_axes([0.22, 0.12, 0.1, 0.05])
-    ax_pause = fig.add_axes([0.34, 0.12, 0.1, 0.05])
-    ax_next = fig.add_axes([0.46, 0.12, 0.1, 0.05])
-    
-    btn_prev = Button(ax_prev, '< Prev')
-    btn_play = Button(ax_play, '> Play')
-    btn_pause = Button(ax_pause, '|| Pause')
-    btn_next = Button(ax_next, 'Next >')
-    
-    # Create slider below buttons
-    ax_slider = fig.add_axes([0.1, 0.05, 0.8, 0.03])
+    # Create slider for frame navigation
+    ax_slider = fig.add_axes([0.1, 0.08, 0.8, 0.03])
     slider = Slider(ax_slider, 'Timestep', 0, len(flow_files)-1, 
                     valinit=0, valfmt='%d', valstep=1)
+    
+    # Create status text area to show controls
+    status_text = fig.text(0.1, 0.12, 
+                          'Controls: Space=Play/Pause, Left/Right=Step, Slider=Jump to frame',
+                          fontsize=9, verticalalignment='bottom')
     
     # Animation state
     is_playing = [False]
@@ -189,6 +181,11 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
             # Move to next frame
             current_frame[0] = (current_frame[0] + 1) % len(flow_files)
             update_frame(current_frame[0])
+            # Update status text
+            try:
+                status_text.set_text('Controls: Space=Play/Pause, Left/Right=Step, Slider=Jump | Status: PLAYING')
+            except:
+                pass
         return []
     
     # Create animation with many frames so it can run continuously
@@ -209,65 +206,73 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
                 current_frame[0] = idx
                 update_frame(idx)
     
-    def on_prev(event):
-        """Go to previous frame"""
-        # Stop animation first
-        is_playing[0] = False
-        try:
-            if hasattr(anim, 'event_source') and anim.event_source:
-                anim.event_source.stop()
-        except:
-            pass
-        # Update frame
-        current_frame[0] = max(0, current_frame[0] - 1)
-        update_frame(current_frame[0])
-        # Force canvas update
-        fig.canvas.draw_idle()
-    
-    def on_next(event):
-        """Go to next frame"""
-        # Stop animation first
-        is_playing[0] = False
-        try:
-            if hasattr(anim, 'event_source') and anim.event_source:
-                anim.event_source.stop()
-        except:
-            pass
-        # Update frame
-        current_frame[0] = min(len(flow_files) - 1, current_frame[0] + 1)
-        update_frame(current_frame[0])
-        # Force canvas update
-        fig.canvas.draw_idle()
-    
-    def on_play(event):
-        """Start animation"""
-        is_playing[0] = True
-        try:
-            if hasattr(anim, 'event_source') and anim.event_source:
-                if not anim.event_source.isAlive():
-                    anim.event_source.start()
-        except:
-            # If start fails, try alternative method
+    def on_key_press(event):
+        """Handle keyboard events"""
+        if event.key == ' ':  # Space bar for play/pause
+            if is_playing[0]:
+                # Pause
+                is_playing[0] = False
+                try:
+                    if hasattr(anim, 'event_source') and anim.event_source:
+                        anim.event_source.stop()
+                except:
+                    pass
+                status_text.set_text('Controls: Space=Play/Pause, Left/Right=Step, Slider=Jump | Status: PAUSED')
+            else:
+                # Play
+                is_playing[0] = True
+                try:
+                    if hasattr(anim, 'event_source') and anim.event_source:
+                        if not anim.event_source.isAlive():
+                            anim.event_source.start()
+                except:
+                    try:
+                        anim._start()
+                    except:
+                        pass
+                status_text.set_text('Controls: Space=Play/Pause, Left/Right=Step, Slider=Jump | Status: PLAYING')
+            fig.canvas.draw_idle()
+            
+        elif event.key in ['left', 'a']:  # Left arrow or 'a' for previous
+            is_playing[0] = False
             try:
-                anim._start()
+                if hasattr(anim, 'event_source') and anim.event_source:
+                    anim.event_source.stop()
             except:
                 pass
+            current_frame[0] = max(0, current_frame[0] - 1)
+            update_frame(current_frame[0])
+            status_text.set_text('Controls: Space=Play/Pause, Left/Right=Step, Slider=Jump | Status: PAUSED')
+            fig.canvas.draw_idle()
+            
+        elif event.key in ['right', 'd']:  # Right arrow or 'd' for next
+            is_playing[0] = False
+            try:
+                if hasattr(anim, 'event_source') and anim.event_source:
+                    anim.event_source.stop()
+            except:
+                pass
+            current_frame[0] = min(len(flow_files) - 1, current_frame[0] + 1)
+            update_frame(current_frame[0])
+            status_text.set_text('Controls: Space=Play/Pause, Left/Right=Step, Slider=Jump | Status: PAUSED')
+            fig.canvas.draw_idle()
     
-    def on_pause(event):
-        """Pause animation"""
-        is_playing[0] = False
-        try:
-            if hasattr(anim, 'event_source') and anim.event_source:
-                anim.event_source.stop()
-        except:
-            pass
+    # Update slider callback to also update status
+    def on_slider_change_with_status(val):
+        """Handle slider changes with status update"""
+        on_slider_change(val)
+        if not is_playing[0]:
+            status_text.set_text('Controls: Space=Play/Pause, Left/Right=Step, Slider=Jump | Status: PAUSED')
     
     # Connect callbacks
-    slider.on_changed(on_slider_change)
-    btn_prev.on_clicked(on_prev)
-    btn_next.on_clicked(on_next)
-    btn_play.on_clicked(on_play)
-    btn_pause.on_clicked(on_pause)
+    slider.on_changed(on_slider_change_with_status)
+    fig.canvas.mpl_connect('key_press_event', on_key_press)
+    
+    # Set initial status
+    status_text.set_text('Controls: Space=Play/Pause, Left/Right=Step, Slider=Jump | Status: PAUSED')
+    
+    # Ensure figure can receive keyboard events
+    fig.canvas.set_window_title('Animation - Click on figure to enable keyboard controls')
     
     # Don't use tight_layout with manually positioned widgets
     # plt.tight_layout()  # Commented out to avoid warnings with manual positioning
