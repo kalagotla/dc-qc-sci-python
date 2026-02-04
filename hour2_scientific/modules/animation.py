@@ -120,10 +120,13 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
         """Update the plot with data from frame idx"""
         nonlocal contour_sets
         
-        # Remove previous contour collections
+        # Clear existing contours by removing collections
         for cs in contour_sets:
             for coll in cs.collections:
-                coll.remove()
+                try:
+                    coll.remove()
+                except:
+                    pass
         contour_sets = []
 
         # Load and process new frame
@@ -137,35 +140,57 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
             contour_sets.append(cs)
         
         # Update title
-        ax.set_title(f'Frame {idx+1}/{len(flow_files)}: {os.path.basename(flow_files[idx])}')
+        title_text = f'Frame {idx+1}/{len(flow_files)}: {os.path.basename(flow_files[idx])}'
+        ax.set_title(title_text)
         
         # Update colorbar to reflect new data
         if len(contour_sets) > 0:
-            cbar.update_normal(contour_sets[-1])
+            try:
+                cbar.update_normal(contour_sets[-1])
+            except:
+                # If update_normal fails, try setting mappable directly
+                try:
+                    cbar.mappable = contour_sets[-1]
+                    cbar.update_bruteforce(contour_sets[-1])
+                except:
+                    pass
         
         # Update slider without triggering callback
         slider_updating[0] = True
-        slider.set_val(idx)
+        try:
+            slider.set_val(idx)
+        except:
+            pass
         slider_updating[0] = False
         
-        # Force redraw - use draw() instead of draw_idle() for immediate update
-        fig.canvas.draw()
+        # Force redraw - try multiple methods for compatibility
+        try:
+            fig.canvas.draw()
+        except:
+            try:
+                fig.canvas.draw_idle()
+            except:
+                plt.pause(0.001)
     
     def animate_frame(frame_idx):
-        """Animation callback function"""
+        """Animation callback function - called by FuncAnimation"""
         if is_playing[0]:
-            # Increment current frame when playing
-            current_frame[0] = (current_frame[0] + 1) % len(flow_files)
-            update_frame(current_frame[0])
+            # Use frame_idx modulo to cycle through frames
+            frame_to_show = frame_idx % len(flow_files)
+            current_frame[0] = frame_to_show
+            update_frame(frame_to_show)
         return []
     
-    # Create animation first
+    # Create animation with fixed number of frames - it will repeat
     anim = animation.FuncAnimation(fig, animate_frame, frames=len(flow_files),
                                    interval=interval_ms, repeat=True, blit=False)
     
-    # Start paused
-    if anim.event_source:
-        anim.event_source.stop()
+    # Start paused - stop the animation immediately
+    try:
+        if hasattr(anim, 'event_source') and anim.event_source:
+            anim.event_source.stop()
+    except:
+        pass
     is_playing[0] = False
     
     # Now define handlers that can reference anim
@@ -180,7 +205,7 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
     def on_prev(event):
         """Go to previous frame"""
         is_playing[0] = False
-        if anim.event_source:
+        if hasattr(anim, 'event_source') and anim.event_source:
             anim.event_source.stop()
         current_frame[0] = max(0, current_frame[0] - 1)
         update_frame(current_frame[0])
@@ -188,21 +213,27 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
     def on_next(event):
         """Go to next frame"""
         is_playing[0] = False
-        if anim.event_source:
+        if hasattr(anim, 'event_source') and anim.event_source:
             anim.event_source.stop()
         current_frame[0] = min(len(flow_files) - 1, current_frame[0] + 1)
         update_frame(current_frame[0])
     
     def on_play(event):
-        """Start animation from current frame"""
+        """Start animation"""
         is_playing[0] = True
-        if anim.event_source:
+        if hasattr(anim, 'event_source') and anim.event_source:
             anim.event_source.start()
+        else:
+            # Try alternative start method
+            try:
+                anim._start()
+            except:
+                pass
     
     def on_pause(event):
         """Pause animation"""
         is_playing[0] = False
-        if anim.event_source:
+        if hasattr(anim, 'event_source') and anim.event_source:
             anim.event_source.stop()
     
     # Connect callbacks
