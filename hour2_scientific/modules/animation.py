@@ -96,11 +96,12 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
     ax.set_ylabel('y')
     
     # Create control panel - buttons first, then slider below
-    # Create buttons in a row above the slider
-    ax_prev = plt.axes([0.1, 0.15, 0.08, 0.04])
-    ax_play = plt.axes([0.2, 0.15, 0.08, 0.04])
-    ax_pause = plt.axes([0.3, 0.15, 0.08, 0.04])
-    ax_next = plt.axes([0.4, 0.15, 0.08, 0.04])
+    # Create buttons in a row above the slider (larger for better clickability)
+    # Use fig.add_axes to ensure proper association with figure
+    ax_prev = fig.add_axes([0.1, 0.12, 0.1, 0.05])
+    ax_play = fig.add_axes([0.22, 0.12, 0.1, 0.05])
+    ax_pause = fig.add_axes([0.34, 0.12, 0.1, 0.05])
+    ax_next = fig.add_axes([0.46, 0.12, 0.1, 0.05])
     
     btn_prev = Button(ax_prev, '< Prev')
     btn_play = Button(ax_play, '> Play')
@@ -108,7 +109,7 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
     btn_next = Button(ax_next, 'Next >')
     
     # Create slider below buttons
-    ax_slider = plt.axes([0.1, 0.05, 0.8, 0.03])
+    ax_slider = fig.add_axes([0.1, 0.05, 0.8, 0.03])
     slider = Slider(ax_slider, 'Timestep', 0, len(flow_files)-1, 
                     valinit=0, valfmt='%d', valstep=1)
     
@@ -210,27 +211,56 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
     
     def on_prev(event):
         """Go to previous frame"""
-        is_playing[0] = False  # Pause when manually stepping
+        # Stop animation first
+        is_playing[0] = False
+        try:
+            if hasattr(anim, 'event_source') and anim.event_source:
+                anim.event_source.stop()
+        except:
+            pass
+        # Update frame
         current_frame[0] = max(0, current_frame[0] - 1)
         update_frame(current_frame[0])
+        # Force canvas update
+        fig.canvas.draw_idle()
     
     def on_next(event):
         """Go to next frame"""
-        is_playing[0] = False  # Pause when manually stepping
+        # Stop animation first
+        is_playing[0] = False
+        try:
+            if hasattr(anim, 'event_source') and anim.event_source:
+                anim.event_source.stop()
+        except:
+            pass
+        # Update frame
         current_frame[0] = min(len(flow_files) - 1, current_frame[0] + 1)
         update_frame(current_frame[0])
+        # Force canvas update
+        fig.canvas.draw_idle()
     
     def on_play(event):
         """Start animation"""
         is_playing[0] = True
-        if hasattr(anim, 'event_source') and anim.event_source:
-            anim.event_source.start()
+        try:
+            if hasattr(anim, 'event_source') and anim.event_source:
+                if not anim.event_source.isAlive():
+                    anim.event_source.start()
+        except:
+            # If start fails, try alternative method
+            try:
+                anim._start()
+            except:
+                pass
     
     def on_pause(event):
         """Pause animation"""
         is_playing[0] = False
-        if hasattr(anim, 'event_source') and anim.event_source:
-            anim.event_source.stop()
+        try:
+            if hasattr(anim, 'event_source') and anim.event_source:
+                anim.event_source.stop()
+        except:
+            pass
     
     # Connect callbacks
     slider.on_changed(on_slider_change)
