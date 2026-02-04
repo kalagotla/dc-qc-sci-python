@@ -86,39 +86,53 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
     cbar = fig.colorbar(contour_sets[-1], ax=ax)
     cbar.set_label('u-velocity')
     ax.set_aspect('equal', adjustable='box')
+    ax.set_xlim(-2, 12)
+    ax.set_ylim(-2, 2)
     ax.set_title(os.path.basename(flow_files[0]))
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     plt.tight_layout()
 
     def init():
-        return []
+        # Return initial collections
+        all_collections = []
+        for cs in contour_sets:
+            all_collections.extend(cs.collections)
+        return all_collections
 
     def update(idx):
         nonlocal contour_sets
-        # Clear previous contourf artists
+        # Remove previous contour collections
         for cs in contour_sets:
             for coll in cs.collections:
                 coll.remove()
         contour_sets = []
 
+        # Load and process new frame
         flow = FlowIO(flow_files[idx])
         flow.read_flow(data_type='f4')
         blocks = prepare_block_views(grid, flow)
+        all_collections = []
         for (X, Y, U) in blocks:
             cs = ax.contourf(X, Y, U, levels=levels, vmin=umin, vmax=umax, cmap='RdBu_r')
             contour_sets.append(cs)
+            all_collections.extend(cs.collections)
+        
+        # Update title
         ax.set_title(os.path.basename(flow_files[idx]))
-        return []
+        
+        # Return all collections so matplotlib knows what to redraw
+        return all_collections
 
     anim = animation.FuncAnimation(fig, update, init_func=init,
-                                   frames=len(flow_files), interval=interval_ms, blit=False)
+                                   frames=len(flow_files), interval=interval_ms, blit=False, repeat=True)
 
     if save_path is not None:
         save_path = os.path.join(os.path.dirname(__file__), save_path)
         anim.save(save_path, dpi=150, writer='ffmpeg')
 
     plt.show()
+    return anim
 
 
 if __name__ == '__main__':
