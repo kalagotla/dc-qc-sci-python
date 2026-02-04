@@ -10,6 +10,7 @@ scikit-learn>=1.2.0
 # Visualization
 matplotlib>=3.7.0
 seaborn>=0.12.0
+PyQt6>=6.5.0
 
 # Deep Learning (PyTorch)
 torch>=2.0.0
@@ -22,3 +23,7 @@ ipywidgets>=8.0.0
 
 # Statistics
 statsmodels>=0.14.0
+
+# LES cylinder utilities
+# If lptlib is hosted privately, replace this with the appropriate Git URL.
+lptlib
