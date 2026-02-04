@@ -85,7 +85,7 @@ class Univariate:
         ss_tot = ((y - y.mean()) ** 2).sum()
         return (1 - ss_res / ss_tot).item()
 
-    def train(self, plot=True, plot_at=1, save_at=100, filename='../models/1var_model.tar'):
+    def train(self, plot=True, plot_at=1, save_at=100, filename='models/1var_model.tar'):
         LOSS = []
         R2 = []
         LOSST = []
@@ -132,7 +132,7 @@ class Univariate:
 
         self.net.apply(weight_reset)
 
-    def continue_train(self, filename='../models/1var_model.tar'):
+    def continue_train(self, filename='models/1var_model.tar'):
         checkpoint = torch.load(filename)
         self.net.load_state_dict(checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])

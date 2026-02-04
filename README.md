@@ -118,10 +118,9 @@ dc-qc-sci-python/
 │   ├── simple_dnns/             # DNN package
 │   │   ├── network.py, univariate.py, bivariate.py, simple_data.py, noise_data.py
 │   │   └── pretrained_models/  # Saved checkpoints (.tar) and generate.py
+│   ├── models/                  # Saved model checkpoints
 │   ├── dnns_with_pytorch.ipynb  # PyTorch tutorial
 │   └── ml_challenge_info.md     # ML Challenge info
-│
-└── models/                      # Saved model checkpoints
 ```
 
 ## Prerequisites
