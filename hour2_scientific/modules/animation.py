@@ -271,8 +271,15 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
     # Set initial status
     status_text.set_text('Controls: Space=Play/Pause, Left/Right=Step, Slider=Jump | Status: PAUSED')
     
-    # Ensure figure can receive keyboard events
-    fig.canvas.set_window_title('Animation - Click on figure to enable keyboard controls')
+    # Ensure figure can receive keyboard events - set window title if possible
+    try:
+        if hasattr(fig.canvas, 'manager') and hasattr(fig.canvas.manager, 'window'):
+            fig.canvas.manager.window.setWindowTitle('Animation - Click on figure to enable keyboard controls')
+        elif hasattr(fig.canvas, 'set_window_title'):
+            fig.canvas.set_window_title('Animation - Click on figure to enable keyboard controls')
+    except:
+        # If setting title fails, it's not critical
+        pass
     
     # Don't use tight_layout with manually positioned widgets
     # plt.tight_layout()  # Commented out to avoid warnings with manual positioning
