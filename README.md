@@ -20,7 +20,7 @@ A 3-hour hands-on workshop introducing Python for scientific computing, data pro
 
 ```bash
 # Windows (PowerShell)
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 # macOS/Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -128,6 +128,16 @@ dc-qc-sci-python/
 - Basic familiarity with programming concepts
 - A computer with internet access
 - Willingness to learn!
+- **Windows users:** Microsoft MPI v10.1.3 (required for MPI-enabled examples)
+
+### Installing Microsoft MPI on Windows
+
+- Download **Microsoft MPI v10.1.3** from the official Microsoft site:  
+  [Microsoft MPI v10.1.3](https://www.microsoft.com/en-us/download/details.aspx?id=105289)
+- Run `msmpisetup.exe` and follow the installer steps.
+- Restart your terminal so the MPI tools are available on your `PATH`.
+
+> macOS/Linux users: system MPI (e.g., `mpich` or `openmpi`) may be used where needed.
 
 ## Workshop Agenda
 
