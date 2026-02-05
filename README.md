@@ -97,14 +97,14 @@ dc-qc-sci-python/
 ├── hour1_basics/                # Hour 1: Python Basics
 │   ├── 01_environment_setup.md  # Setup guide
 │   ├── 02_python_basics.ipynb   # Python fundamentals
-│   └── modules/                 # Example module
-│       └── my_functions.py
+│   └── modules/                 # Example module used in notebooks
+│       └── my_functions.py      # Math + unit conversion utilities
 │
 ├── hour2_scientific/            # Hour 2: Scientific Computing
-│   ├── 01_data_loading.ipynb    # Data processing tutorial
-│   ├── modules/                 # Helpers for Hour 2
-│   │   ├── animation.py         # Flow field animation
-│   │   └── helpers.py           # Plot and data utilities
+│   ├── 01_scientific_python.ipynb  # NumPy/Pandas/Matplotlib + CFD example
+│   ├── modules/                    # Reusable helpers for Hour 2
+│   │   ├── animation.py            # contour animation (requires lptlib)
+│   │   └── helpers.py              # Grid/flow loaders + mid-plane u field extraction (requires lptlib)
 │   └── data/
 │       ├── sample_data.csv      # Sample experimental data (Part 1)
 │       └── cylinder/            # LES cylinder CFD subset (Part 2)
@@ -117,10 +117,10 @@ dc-qc-sci-python/
 │   │   └── airfoil_self_noise.dat
 │   ├── simple_dnns/             # DNN package
 │   │   ├── network.py, univariate.py, bivariate.py, simple_data.py, noise_data.py
-│   │   └── pretrained_models/  # Saved checkpoints (.tar) and generate.py
+│   │   └── pretrained_models/   # Saved checkpoints (.tar) and generate.py
 │   ├── models/                  # Saved model checkpoints
-│   ├── dnns_with_pytorch.ipynb  # PyTorch tutorial
-│   └── ml_challenge_info.md     # ML Challenge info
+│   ├── 02_dnns_with_pytorch.ipynb  # PyTorch tutorial using simple_dnns
+│   └── 01_ml_challenge_info.md     # ML Challenge info
 ```
 
 ## Prerequisites
@@ -147,20 +147,30 @@ dc-qc-sci-python/
 
 ### Hour 2: Scientific Data Processing (60 min)
 
-1. **NumPy Arrays** (20 min)
-   - Creating and manipulating arrays
-   - Array operations and broadcasting
-   - Aggregations and statistics
-
-2. **Data Loading with Pandas** (20 min)
-   - Reading CSV, Excel files
+1. **Data exploration with Pandas** (20 min)
+   - Reading CSV files
    - DataFrames and Series
    - Data exploration and cleaning
+   - Accessing and filtering data
+   - Creating new columns and calculations
 
-3. **Visualization with Matplotlib** (20 min)
-   - Line plots, scatter plots
-   - Customizing figures
-   - Saving publication-ready figures
+2. **NumPy Operations** (15 min)
+   - Converting Pandas data to NumPy arrays
+   - Statistical operations (mean, std, min, max)
+   - Numerical differentiation and integration
+   - Working seamlessly with Pandas
+
+3. **Visualization with Matplotlib** (15 min)
+   - Line plots and time series
+   - Multiple subplots
+   - Scatter plots with colorbars
+   - Publication-quality figure customization
+   - Saving figures
+
+4. **Advanced Example: LES Cylinder CFD Data** (10 min)
+   - Loading structured CFD data with lptlib
+   - Contour plots of flow fields
+   - Interactive animations (optional)
 
 ### Hour 3: Deep Learning with PyTorch (60 min)
 
@@ -214,6 +224,9 @@ jupyter lab
 
 **Dilip Kalagotla**
 - Email: dilip.kalagotla@gmail.com
+
+**Elijah LaLonde**
+- Email: elalonde@fsu.edu
 
 ## License
 
