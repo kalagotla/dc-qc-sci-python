@@ -24,6 +24,9 @@ ipywidgets>=8.0.0
 # Statistics
 statsmodels>=0.14.0
 
+# 3d plotting libraries
+vtk
+vtkplotlib
 # LES cylinder utilities
 # If lptlib is hosted privately, replace this with the appropriate Git URL.
 lptlib

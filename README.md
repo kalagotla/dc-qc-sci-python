@@ -20,7 +20,7 @@ A 3-hour hands-on workshop introducing Python for scientific computing, data pro
 
 ```bash
 # Windows (PowerShell)
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 # macOS/Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -215,6 +215,8 @@ jupyter lab
 **Dilip Kalagotla**
 - Email: dilip.kalagotla@gmail.com
 
+**Elijah LaLonde**
+- Email elalonde@fsu.edu
 ## License
 
 This workshop material is provided under the MIT License. See [LICENSE](LICENSE) for details.
