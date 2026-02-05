@@ -7,7 +7,7 @@ license = { text = "MIT" }
 authors = [
     { name = "Dilip Kalagotla", email = "dilip.kalagotla@gmail.com" }
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.14"
 dependencies = [
     "numpy>=1.24.0",
     "pandas>=2.0.0",
@@ -22,6 +22,9 @@ dependencies = [
     "ipywidgets>=8.0.0",
     "lptlib",
     "PyQt6>=6.5.0",
+    "statsmodels>=0.14.0",
+    "vtk",
+    "vtkplotlib",
 ]
 
 [project.optional-dependencies]
