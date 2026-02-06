@@ -1,19 +1,26 @@
 import os
 import glob
+import sys
+import io
+import contextlib
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation
 from matplotlib.widgets import Slider
-import sys
+from tqdm import tqdm
 
 # Ensure project src is importable when running this script directly
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from lptlib.io.plot3dio import GridIO, FlowIO
 
 
 def read_grid(grid_path):
     grid = GridIO(grid_path)
-    grid.read_grid(data_type='f4')
+    # Suppress verbose lptlib output like "grid data reading is successful"
+    _buf = io.StringIO()
+    with contextlib.redirect_stdout(_buf), contextlib.redirect_stderr(_buf):
+        grid.read_grid(data_type="f4")
     return grid
 
 
@@ -27,9 +34,13 @@ def list_flow_files(example_flow_path):
 def compute_u_limits(flow_files):
     u_min = np.inf
     u_max = -np.inf
-    for f in flow_files:
+    # Use tqdm to show progress while scanning all files
+    for f in tqdm(flow_files, desc="Scanning u-range", unit="file"):
         flow = FlowIO(f)
-        flow.read_flow(data_type='f4')
+        # Suppress verbose lptlib output while reading each flow file
+        _buf = io.StringIO()
+        with contextlib.redirect_stdout(_buf), contextlib.redirect_stderr(_buf):
+            flow.read_flow(data_type="f4")
         # q shape: (ni, nj, nk, 5, nb); indices: 0=rho, 1=rho*u
         rho = flow.q[..., 0, :]
         rhou = flow.q[..., 1, :]
@@ -77,7 +88,10 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
     
     # Initialize first frame
     flow0 = FlowIO(flow_files[0])
-    flow0.read_flow(data_type='f4')
+    # Suppress verbose lptlib output for the initial frame
+    _buf0 = io.StringIO()
+    with contextlib.redirect_stdout(_buf0), contextlib.redirect_stderr(_buf0):
+        flow0.read_flow(data_type="f4")
     blocks0 = prepare_block_views(grid, flow0)
 
     contour_sets = []
@@ -122,7 +136,10 @@ def animate_u_contours(grid_path='cylinder.sp.x', example_flow_path='sol-0000010
 
         # Load and process new frame
         flow = FlowIO(flow_files[idx])
-        flow.read_flow(data_type='f4')
+        # Suppress verbose lptlib output when loading each frame
+        _buf = io.StringIO()
+        with contextlib.redirect_stdout(_buf), contextlib.redirect_stderr(_buf):
+            flow.read_flow(data_type="f4")
         blocks = prepare_block_views(grid, flow)
         
         # Redraw contours

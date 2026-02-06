@@ -30,3 +30,11 @@ vtkplotlib
 # LES cylinder utilities
 # If lptlib is hosted privately, replace this with the appropriate Git URL.
 lptlib
+
+# Data download / storage
+huggingface_hub
+h5py
+
+# SPOD requirements
+imageio
+psutil

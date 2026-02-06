@@ -25,6 +25,10 @@ dependencies = [
     "statsmodels>=0.14.0",
     "vtk",
     "vtkplotlib",
+    "huggingface_hub",
+    "h5py",
+    "imageio",
+    "psutil",
 ]
 
 [project.optional-dependencies]
