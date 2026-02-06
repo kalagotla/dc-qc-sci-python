@@ -236,10 +236,7 @@ jupyter lab
 - Email: dilip.kalagotla@gmail.com
 
 **Elijah LaLonde**
-<<<<<<< HEAD
 - Email elalonde@fsu.edu
-=======
-- Email: elalonde@fsu.edu
 
 ## License
 
