@@ -31,7 +31,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```bash
 # Clone the repository
 git clone https://github.com/kalagotla/dc-qc-sci-python.git
-cd dc-qc-sci-python
+cd dc-qc-sci-python-main
 
 # Create environment and install dependencies (one command!)
 uv sync
