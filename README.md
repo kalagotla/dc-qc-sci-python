@@ -241,7 +241,6 @@ jupyter lab
 =======
 - Email: elalonde@fsu.edu
 
->>>>>>> 253c772fc4030a85c906203d2a2cf79729173ea8
 ## License
 
 This workshop material is provided under the MIT License. See [LICENSE](LICENSE) for details.
