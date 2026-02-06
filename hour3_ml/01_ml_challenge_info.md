@@ -53,10 +53,10 @@ The workshop series will consist of multiple sessions:
 
 | Session | Topic | Duration |
 |---------|-------|----------|
-| 1 | Challenge Introduction & Data Exploration | 2 hours |
-| 2 | Baseline Model Development | 2 hours |
-| 3 | Advanced Architectures | 2 hours |
-| 4 | Optimization & Submission | 2 hours |
+| 1 | Challenge Introduction & Data Exploration | 2 sessions |
+| 2 | Baseline Model Development | 4 sessions |
+| 3 | Advanced Architectures | 2 sessions |
+| 4 | Optimization & Submission | 10 sessions |
 
 ## Registration
 
